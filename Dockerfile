@@ -7,7 +7,8 @@ RUN apt-get update && \
     curl \
     xvfb \
     libxi6 \
-    libgconf-2-4 \
+    libglib2.0-0 \
+    libnss3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /etc/openvpn
