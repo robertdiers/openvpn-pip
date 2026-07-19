@@ -31,6 +31,15 @@ done
 
 echo "VPN ist aktiv!"
 
+# =====================================================================
+# TRUENAS FIX: Falls der Befehl als ein einziger String übergeben wurde,
+# splitten wir ihn hier sauber in Argumente auf.
+# =====================================================================
+if [ $# -eq 1 ]; then
+    echo "TrueNAS-Kommando erkannt. Bereite Argumente vor..."
+    eval "set -- $1"
+fi
+
 # 4. Übergabe an das eigentliche Command (z.B. dein Python-Skript)
 exec "$@"
 
