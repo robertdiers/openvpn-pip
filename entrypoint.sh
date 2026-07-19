@@ -1,13 +1,16 @@
 #!/bin/sh
 
-# 1. Dynamische Python-Pakete installieren, falls per ENV übergeben
+# 1. Dynamische Python-Pakete installieren
 if [ -n "$PIP_PACKAGES" ]; then
     echo "Installiere zusätzliche Python-Pakete: $PIP_PACKAGES ..."
-    # --no-cache-dir spart Platz im Container-Dateisystem
     pip install --no-cache-dir $PIP_PACKAGES
 fi
 
-# 2. OpenVPN Konfigurations-Check
+# 2. VOR dem VPN-Start: Das originale Docker-Gateway auslesen
+ORIGINAL_GW=$(ip route show | grep default | awk '{print $3}')
+echo "Originales Docker-Gateway gesichert: $ORIGINAL_GW"
+
+# 3. OpenVPN Konfigurations-Check
 if [ ! -f "/etc/openvpn/vpn.ovpn" ]; then
     echo "Fehler: Keine vpn.ovpn gefunden!"
     exit 1
@@ -16,7 +19,7 @@ fi
 echo "Starte OpenVPN im Hintergrund..."
 openvpn --cd /etc/openvpn --config /etc/openvpn/vpn.ovpn --script-security 2 &
 
-# 3. Warten, bis das VPN-Interface bereit ist
+# 4. Warten, bis das VPN-Interface bereit ist
 echo "Warte auf VPN-Verbindung..."
 MAX_TRIES=15
 TRY=0
@@ -31,19 +34,18 @@ done
 
 echo "VPN ist aktiv!"
 
-# Ersetze 192.168.1.0/24 durch den IP-Bereich deines eigentlichen Heimnetzwerks!
-# eth0 ist in der Regel das Standard-Docker-Interface im Container.
-ip route add 192.168.1.0/24 dev eth0 via $(ip route show | grep default | awk '{print $3}') 2>/dev/null
+# 5. ROUTING-FIX: Lokalen Datenverkehr am VPN vorbeileiten
+# Das sorgt dafür, dass Antworten an dein Heimnetzwerk nicht ins VPN geschickt werden.
+if [ -n "$ORIGINAL_GW" ]; then
+    echo "Richte lokale Routen über $ORIGINAL_GW ein..."
+    ip route add 192.168.0.0/16 via "$ORIGINAL_GW" dev eth0 2>/dev/null
+    ip route add 10.0.0.0/8 via "$ORIGINAL_GW" dev eth0 2>/dev/null
+fi
 
-# =====================================================================
-# TRUENAS FIX: Falls der Befehl als ein einziger String übergeben wurde,
-# splitten wir ihn hier sauber in Argumente auf.
-# =====================================================================
+# 6. TrueNAS-String-Fix
 if [ $# -eq 1 ]; then
     echo "TrueNAS-Kommando erkannt. Bereite Argumente vor..."
     eval "set -- $1"
 fi
 
-# 4. Übergabe an das eigentliche Command (z.B. dein Python-Skript)
 exec "$@"
-
