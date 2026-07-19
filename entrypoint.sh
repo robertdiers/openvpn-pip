@@ -31,6 +31,10 @@ done
 
 echo "VPN ist aktiv!"
 
+# Ersetze 192.168.1.0/24 durch den IP-Bereich deines eigentlichen Heimnetzwerks!
+# eth0 ist in der Regel das Standard-Docker-Interface im Container.
+ip route add 192.168.1.0/24 dev eth0 via $(ip route show | grep default | awk '{print $3}') 2>/dev/null
+
 # =====================================================================
 # TRUENAS FIX: Falls der Befehl als ein einziger String übergeben wurde,
 # splitten wir ihn hier sauber in Argumente auf.
