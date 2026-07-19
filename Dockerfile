@@ -1,12 +1,17 @@
 FROM python:3.14-slim
 
+# OpenVPN, curl sowie Xvfb und grundlegende Grafikbibliotheken installieren
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openvpn curl && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    openvpn \
+    curl \
+    xvfb \
+    libxi6 \
+    libgconf-2-4 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /etc/openvpn
 
-# 2. Entrypoint-Skript vorbereiten
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
