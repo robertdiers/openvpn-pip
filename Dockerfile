@@ -1,11 +1,13 @@
 FROM python:3.14-slim
 
-# OpenVPN, curl sowie Xvfb und grundlegende Grafikbibliotheken installieren
+# OpenVPN, curl, Xvfb, Netzwerk-Tools und Browser-Abhängigkeiten installieren
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     openvpn \
     curl \
     xvfb \
+    iproute2 \
+    procps \
     libxi6 \
     libglib2.0-0 \
     libnss3 \
