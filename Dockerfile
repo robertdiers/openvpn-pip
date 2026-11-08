@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 # OpenVPN, Netzwerk-Tools, FFmpeg und Browser-Abhängigkeiten installieren
 RUN apt-get update && \
